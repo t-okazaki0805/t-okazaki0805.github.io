@@ -1,0 +1,182 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/three@0.131.3/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.131.3/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      // ページの読み込みを待つ
+      window.addEventListener('load', init);
+
+      function init() {
+          // サイズを指定 *今は適当
+          const width = 960;
+          const height = 540;
+
+          // canvas 要素の参照を取得する
+          const canvas = document.querySelector('#myCanvas');
+          // マウス座標管理用のベクトルを作成
+          const mouse = new THREE.Vector2();
+          const canvasElement = document.querySelector('#myCanvas');
+          renderer = new THREE.WebGLRenderer({
+	      canvas: canvas,	     
+	  });
+          renderer.setPixelRatio(window.devicePixelRatio);
+          renderer.setSize(width, height);
+
+          // シーンを作成
+          const scene = new THREE.Scene();
+
+          // カメラを作成
+          const camera = new THREE.PerspectiveCamera(45, width / height);
+          // カメラの初期座標を設定
+          camera.position.set(0, 500, 1000);
+
+          // カメラコントローラーを作成
+          const controls = new THREE.OrbitControls(camera, canvasElement);
+
+          // 滑らかにカメラコントローラーを制御する
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.2;
+
+          // 平行光源を作成
+          //const directionalLight = new THREE.DirectionalLight(0xffffff);
+          //directionalLight.position.set(1, 1, 1);
+          //scene.add(directionalLight);
+          // 環境光源
+          const ambientLight = new THREE.AmbientLight(0xffffff);
+          ambientLight.position.set(1, 1, 1);
+          scene.add(ambientLight);
+
+          // シーンにメッシュを追加します
+	  // 球体を作成
+	  const geometry_sphere = new THREE.SphereGeometry(300, 30, 30);
+	  const material_sphere = new THREE.MeshPhongMaterial({
+	      transparent: true,
+	      opacity: 0.5,
+	      color: 0x00FF00
+	  });
+	  const mesh_sphere = new THREE.Mesh(geometry_sphere, material_sphere);
+          mesh_sphere.position.x = 500;
+          mesh_sphere.position.z = -500;
+	  scene.add(mesh_sphere);
+
+	  const material_sphere2 = new THREE.MeshPhongMaterial({
+	      transparent: true,
+	      opacity: 0.5,
+	      color: 0x0000FF
+	  });
+	  const mesh_sphere2 = new THREE.Mesh(geometry_sphere, material_sphere2);
+	  scene.add(mesh_sphere2);
+
+          // 仮想視点のポイント
+          // マウスとの交差を調べたいものは配列に格納する
+          const meshList = [];
+
+          const mesh_mouse = createViewPoint(0, 0, 0);
+	  scene.add(mesh_mouse);
+          meshList.push(mesh_mouse);
+	  const mesh_mouse2 = createViewPoint(500, 0, -500);
+	  scene.add(mesh_mouse2);
+          meshList.push(mesh_mouse2);
+          const mesh_mouse3 = createViewPoint(400, 0, -500);
+	  scene.add(mesh_mouse3);
+          meshList.push(mesh_mouse3);
+          const mesh_mouse4 = createViewPoint(300, 0, -500);
+	  scene.add(mesh_mouse4);
+          meshList.push(mesh_mouse4);
+	  const mesh_mouse5 = createViewPoint(200, 0, -500);
+	  scene.add(mesh_mouse5);
+          meshList.push(mesh_mouse5);
+          const mesh_mouse6 = createViewPoint(100, 0, -500);
+	  scene.add(mesh_mouse6);
+          meshList.push(mesh_mouse6);
+
+	  // レイキャストを作成
+          const raycaster = new THREE.Raycaster();
+          canvas.addEventListener('mousemove', handleMouseMove);
+
+          tick();
+
+          // マウスを動かしたときのイベント
+          function handleMouseMove(event) {
+              const element = event.currentTarget;
+              // canvas要素上のXY座標
+              const x = event.clientX - element.offsetLeft;
+              const y = event.clientY - element.offsetTop;
+              // canvas要素の幅・高さ
+              const w = element.offsetWidth;
+              const h = element.offsetHeight;
+
+              // -1〜+1の範囲で現在のマウス座標を登録する
+              mouse.x = (x / w) * 2 - 1;
+              mouse.y = -(y / h) * 2 + 1;
+          }
+
+
+
+          // 毎フレーム時に実行されるループイベントです
+          function tick() {
+	      // カメラコントローラーを更新
+              controls.update();
+
+              // レイキャスト = マウス位置からまっすぐに伸びる光線ベクトルを生成
+              raycaster.setFromCamera(mouse, camera);
+
+              //// その光線とぶつかったオブジェクトを得る
+              const intersects = raycaster.intersectObjects(meshList);
+
+              meshList.map((mesh) => {
+                  // 交差しているオブジェクトが1つ以上存在し、
+                  // 交差しているオブジェクトの1番目(最前面)のものだったら
+                  if (intersects.length > 0 && mesh === intersects[0].object) {
+                      // 色を赤くする
+                      mesh.material.color.setHex(0xff0000);
+                  } else {
+                      // それ以外は元の色にする
+                      mesh.material.color.setHex(0xffffff);
+                  }
+              });
+
+              //// レンダリング
+              renderer.render(scene, camera);
+              requestAnimationFrame(tick);
+
+
+
+
+
+          }
+      }
+      
+      function set_material(file_name) {
+          // マテリアルを作成
+          const material = new THREE.MeshStandardMaterial({
+              map: new THREE.TextureLoader().load(file_name),
+              //裏面を描画
+              side: THREE.BackSide
+          });
+          // 球体の形状を作成します
+          const geometry = new THREE.SphereGeometry(300, 30, 30);
+          // 形状とマテリアルからメッシュを作成します
+          const earthMesh = new THREE.Mesh(geometry, material);
+          // シーンにメッシュを追加します
+          return earthMesh;
+      }
+      function createViewPoint(xpos, ypos, zpos) {
+	  const geometry = new THREE.CylinderGeometry(50, 50, 10, 32);
+	  const material_mouse = new THREE.MeshStandardMaterial({ color: 0xffffff });
+          const mesh_mouse = new THREE.Mesh(geometry, material_mouse);
+          mesh_mouse.position.x = xpos;
+          mesh_mouse.position.y = ypos;
+          mesh_mouse.position.z = zpos;
+	  return mesh_mouse;
+      }
+
+      
+    </script>
+  </head>
+  <body>
+    <canvas id="myCanvas"></canvas>
+  </body>
+</html>
+

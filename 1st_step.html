@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/three@0.131.3/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.131.3/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js"></script>
+    <script>
+      window.addEventListener("load", init)
+
+      function init() {
+	  // キャンバスサイズ
+	  const width = 512
+	  const height = 512
+
+	  // レンダラーの作成
+	  const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("canvas") })
+	  renderer.setPixelRatio(window.devicePixelRatio)
+	  renderer.setSize(width, height)
+	  // シーンの作成
+	  const scene = new THREE.Scene()
+	  // カメラの作成
+	  const camera = new THREE.PerspectiveCamera(45, width / height)
+
+	  // 箱の作成
+	  const geometry = new THREE.BoxGeometry(50, 50, 50)
+	  const material = new THREE.MeshNormalMaterial()
+	  const box = new THREE.Mesh(geometry, material)
+	  scene.add(box)
+
+	  // レンダリング
+	  camera.position.set(100, 100, 100)
+	  camera.lookAt(box.position)
+	  //renderer.render(scene, camera)
+
+	  // 初回実行
+	  tick();
+
+	  function tick() {
+	      requestAnimationFrame(tick);
+	      // アニメーション処
+	      box.rotation.y += 0.01;
+	      renderer.render(scene, camera); // レンダリング
+	  }
+	  
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="myCanvas"></canvas>
+  </body>
+</html>
